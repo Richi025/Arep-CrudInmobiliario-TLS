@@ -4,7 +4,7 @@ services:
     image: 'mysql:latest'
     environment:
       - 'MYSQL_DATABASE=mydatabase'
-      - 'MYSQL_PASSWORD=secret'
+      - 'MYSQL_PASSWORD=Root13**'
       - 'MYSQL_ROOT_PASSWORD=verysecret'
       - 'MYSQL_USER=user'
     ports:

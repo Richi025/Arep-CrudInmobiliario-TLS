@@ -1,10 +1,8 @@
 # Property Management System with Spring Boot and MySQL and 
 
+This project is a simple property management system implemented using Spring Boot, JPA (Java Persistence API), and MySQL. The system allows users to register and log in through login and registration interfaces to perform CRUD operations (Create, Read, Update, Delete) on property entities. The properties are stored in a MySQL database, and the application exposes a REST API for interaction. It was deployed on AWS using EC2 instances.
 
-
-This project is a simple property management system implemented using Spring Boot, JPA (Java Persistence API), and MySQL. The system allows users to perform CRUD operations (Create, Read, Update, Delete) on property entities. The properties are stored in a MySQL database, and the application exposes a REST API for interaction.
-
-![alt text](images/portada.gif)
+<video controls src="images/Copia de Agregar un título.mp4" title="Title"></video>
 
 ## Getting Started
 
@@ -89,13 +87,18 @@ You need to install the following tools and configure their dependencies:
 2. Update your `application.properties` with the following configuration to connect to the MySQL container:
 
     ```properties
+    spring.application.name=JPA
     spring.datasource.url=jdbc:mysql://localhost:3000/mydatabase
     spring.datasource.username=user
-    spring.datasource.password=secret
+    spring.datasource.password=Root13**
     spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
     spring.jpa.hibernate.ddl-auto=update
     spring.jpa.show-sql=true
     spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+    server.ssl.key-store-password=password123
+    server.ssl.key-store-type=PKCS12
+    server.ssl.key-alias=springboot
+    server.ssl.key-store=classpath:keystore.p12
     ```
 3. Run the application:
     
@@ -103,7 +106,9 @@ You need to install the following tools and configure their dependencies:
     java -jar target/PropertyApplication-0.0.1-SNAPSHOT.jar
     ```
 
-4. Access the API at: `http://localhost:8080/index.html`
+4. Access the API at: `https://localhost:8080/login.html`
+
+    ![alt text](images/imageHTTPS.png)
 
 ## Test Resutls
 
@@ -251,6 +256,16 @@ Two DNS domains are also needed for each EC2 instance in order to generate Let's
     ![!\[alt text\](image.png)](images/imageSSL.png)
 
 
+#### D. Upload frontend files
+
+1. For the frontend to communicate with the backend, the API it will access must be updated.
+
+    ![alt text](images/imageAPI.png)
+
+2. Now, proceed to upload all the frontend files to the /var/www/html directory root.
+
+    ![alt text](images/imageFilesfront.png)
+
 ### **instance SeverWebDocker**
 
 #### A. Let's Encrypt certificate
@@ -284,31 +299,88 @@ Two DNS domains are also needed for each EC2 instance in order to generate Let's
     sudo certbot certonly --standalone -d labserverapacheback.duckdns.org
 
     ```
+    ![alt text](images/imageCERBOT.png)
 
     This command will generate the certificate files, usually located in /etc/letsencrypt/live/your_domain.com/:
 
     + fullchain.pem: This is the certificate chain.
     + privkey.pem: This is the private key
 
-4. Convert to PKCS12 Format
+4. Copy the certificates to a location accessible by Spring Boot
 
     ```bash
-    sudo openssl pkcs12 -export -out /path/to/your/keystore.p12 \
-    -in /etc/letsencrypt/live/your_domain.com/fullchain.pem \
-    -inkey /etc/letsencrypt/live/your_domain.com/privkey.pem \
-    -name "mydomain" -password pass:your_password
+    sudo cp /etc/letsencrypt/live/labserverapacheback.duckdns.org/fullchain.pem /home/ec2-user/
 
+    sudo cp /etc/letsencrypt/live/labserverapacheback.duckdns.org/privkey.pem /home/ec2-user/
     ```
 
-5. Configure Your Spring Boot Application
+5. Verify access permissions
 
-6. Run the Spring Boot Application
+    ```bash
+    sudo chown ec2-user:ec2-user /home/ec2-user/privkey.pem
+    sudo chmod 600 /home/ec2-user/privkey.pem
 
+    sudo chown ec2-user:ec2-user /home/ec2-user/fullchain.pem
+    sudo chmod 600 /home/ec2-user/fullchain.pem
+    ```
+
+6. Configure Spring Boot for HTTPS: Modify the application.properties file:
+
+    ```bash
+    server.port=443
+    server.ssl.key-store-type=PKCS12
+    server.ssl.key-store=/home/ec2-user/keystore.p12
+    server.ssl.key-store-password=password123
+    server.ssl.key-alias=springboot
+    ```
+
+7. Configuration of CORS in Spring Boot
+
+    Communication between servers must be allowed using CORS on the project endpoints as shown in the image.
+
+    ![alt text](images/imageCros.png)
+
+   ![alt text](images/imageCros0.png)
+
+    Additionally, CORS can be configured using a WEBCONFIG class, which works globally in the application.
+
+    ![alt text](images/imageCros2.png)
+
+8. Convert the certificates to a PKCS12 format: Spring Boot requires a keystore in PKCS12 format.
+
+    ```bash
+    sudo yum install openssl -y
+    ```
+
+    ```bash
+    openssl pkcs12 -export -in /home/ec2-user/fullchain.pem -inkey /home/ec2-user/privkey.pem \ -out /home/ec2-user/keystore.p12 -name "springboot" -password pass:password123
+    ```
+
+    ```bash
+    sudo chown ec2-user:ec2-user /home/ec2-user/keystore.p12
+    sudo chmod 600 /home/ec2-user/keystore.p12
+    ```
+
+
+
+7. Upload the project's JAR file to the AWS instance and Run the Spring Boot Application.
+
+    ```bash
+    sudo java -jar PropertyApplication-0.0.1-SNAPSHOT.jar
+    ```
+
+    ![alt text](images/imageRun.png)
+
+8. You can now access the webpage using the following URL, as shown in the video.
+
+    ```bash
+    http://labserverapache.duckdns.org/login.html
+    ```
+
+    <video controls src="images/Copia de Agregar un título.mp4" title="Title"></video>
 ## Diagram Class
 
-![images/imageClass.png](images/imageClass.png)
-
-
+![alt text](images/class.png)
 
 ## Class Diagram Explanation
 
@@ -316,64 +388,73 @@ This diagram represents the structure of the Property Management System and show
 
 ### Classes:
 
-1. **Property**:
-   - Represents the main entity in the system, a "Property" with attributes such as `id`, `address`, `price`, `size`, and `description`.
-   - Methods:
-     - `getId()`: Returns the ID of the property.
-     - `getAddress()`: Returns the address of the property.
-     - `getPrice()`: Returns the price of the property.
-     - `getSize()`: Returns the size of the property.
-     - `getDescription()`: Returns the description of the property.
+1. **Property (Entity)**
 
-2. **PropertyController**:
-   - Acts as the REST controller that handles HTTP requests for managing properties.
-   - Dependencies:
-     - Injects `PropertyService` to delegate business logic.
-   - Methods:
-     - `createProperty(Property property)`: Creates a new property.
-     - `getAllProperties()`: Retrieves all properties.
-     - `getPropertyById(Long id)`: Retrieves a specific property by ID.
-     - `updateProperty(Long id, Property propertyDetails)`: Updates a property by ID.
-     - `deleteProperty(Long id)`: Deletes a property by ID.
+    - Represents a real estate property in the database with attributes such as `id`, `address`, `price`, `size`, and `description`. This class includes getter and setter methods to access and modify these attributes.
 
-3. **PropertyService**:
-   - Implements the business logic for the system.
-   - Dependencies:
-     - Injects `PropertyRepository` to interact with the database.
-   - Methods:
-     - `createProperty(Property property)`: Creates a new property in the database.
-     - `getAllProperties()`: Returns a list of all properties from the database.
-     - `getPropertyById(Long id)`: Retrieves a property by its ID.
-     - `updateProperty(Long id, Property propertyDetails)`: Updates an existing property with new details.
-     - `deleteProperty(Long id)`: Deletes a property from the database.
+2. **User (Entity)**
 
-4. **PropertyRepository**:
-   - This is the interface responsible for data persistence and extends `JpaRepository`.
-   - Methods:
-     - `findByAddress(String address)`: Custom method to search for properties by address.
+    - Represents a user in the system, mapped to a database table. Users are utilized for authentication and system management, with attributes like `id`, `username`, and `password` (which is encrypted).
 
+3. **PropertyRepository (Repository)**
 
+    - Provides CRUD operations for `Property` entities using JPA. It includes a custom query method to find properties by address.
+
+4. **UserRepository (Repository)**
+
+    - Manages CRUD operations for `User` entities. It includes a method to find a user by their username.
+
+5. **PropertyService (Service)**
+
+    - Contains the business logic related to property management. It interacts with the repository to create, update, delete, and retrieve properties.
+
+6. **UserService (Service)**
+
+    - Handles the business logic for user management, such as authentication and registration, and interacts with the repository for database operations.
+
+7. **PropertyController (Controller)**
+
+    - Provides API endpoints to manage properties (create, retrieve, update, delete). It communicates with `PropertyService` to execute business logic.
+
+8. **UserController (Controller)**
+
+    - Exposes API endpoints for user operations, such as registration and authentication. It communicates with `UserService` to handle these actions.
 
 ## Architecture
 
-![images/imgArq.png](images/imgArq.png)
+![alt text](images/arquitec.png)
 
 ### Diagram Explanation
 
+### Explanation of the Diagram
 
+1. **Browser**:
+   - The user accesses the application through a browser, which communicates with both the Apache server and the Spring Boot backend. All communication between the browser and the servers is secured using HTTPS on **port 443**, ensuring encrypted data transmission.
 
-#### Client Browser:
-The browser is the frontend that interacts with the application through static files like `index.html`, `style.css`, and `script.js`. These files send HTTP requests to the backend.
+2. **EC2 Instance: Apache & MySQL**:
+   - This represents an Amazon EC2 instance that hosts both the **Apache server** and **MySQL database**.
+   - **Apache Server**: 
+     - The Apache server serves the static HTML pages to the browser. These pages are:
+       - `login.html`: The login page where users can authenticate.
+       - `register.html`: The registration page where new users can sign up.
+       - `properties.html`: A page for managing or viewing properties.
+   - **MySQL Database**: 
+     - The Apache server also communicates with the MySQL database, which is used to store and manage data for the web application. Apache can interact with MySQL to query user or property data.
 
-#### ECS Backend Server:
-The backend server is deployed on Amazon ECS. It exposes a REST API running on port 8080 and contains the following components:
-- **PropertyController**: Handles incoming HTTP requests.
-- **PropertyService**: Implements business logic.
-- **PropertyRepository**: Manages data persistence operations.
-- **Property**: Represents a property entity in the system.
+3. **EC2 Instance: Spring Boot**:
+   - This represents another Amazon EC2 instance that runs the **Spring Boot backend**, which handles the core business logic of the application.
+   - **Spring Boot Backend**:
+     - The Spring Boot backend is responsible for processing requests from the browser and interacting with the database as needed. It includes:
+       - `Properties Service`: A service responsible for handling operations related to real estate properties (e.g., creating, updating, and deleting properties).
+       - `User Service`: A service that manages user-related operations such as authentication, user registration, and profile management.
 
-#### ECS MySQL Database:
-The MySQL database is deployed on ECS and listens on port 3306. It stores property data.
+4. **HTTPS Connections**:
+   - **Browser to Apache (HTTPS)**: The browser securely communicates with the Apache server over HTTPS on **port 443**. The Apache server serves static HTML pages (login, register, properties) to the browser.
+   - **Browser to Spring Boot (HTTPS)**: The browser also makes secure HTTPS requests directly to the Spring Boot backend on **port 443** for dynamic operations, such as interacting with the `Properties` and `User` services (e.g., saving new property data, or authenticating users).
+
+5. **Apache to Spring Boot (HTTP)**:
+   - While the browser communicates with both servers using HTTPS, the Apache server communicates with the Spring Boot backend over HTTP. This internal communication could be done over HTTP since it is within the secured internal network between the two EC2 instances, although it can also be upgraded to HTTPS for added security.
+
 
 
 ## Built With
@@ -393,4 +474,4 @@ We use [Git](https://github.com/) for version control. For available versions, s
 
 ## Date
 
-October 03, 2024
+October 17, 2024

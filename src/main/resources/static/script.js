@@ -1,6 +1,6 @@
-const apiUrl = 'https://labserverapacheback.duckdns.org/api';
+//const apiUrl = 'https://labserverapacheback.duckdns.org/api';
 
-//const apiUrl = 'http://localhost:8080/api';
+const apiUrl = 'http://localhost:8080/api';
 
 // Redireccionar a la página de login si no hay sesión iniciada
 window.addEventListener('load', function () {
