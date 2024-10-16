@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Propiedades Inmobiliarias</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div ></div>
+    <div class="container">
+        <h1>Gestión de Propiedades Inmobiliarias</h1>
+        <img src="/images/imagePortada.png" alt="Imagen de portada" class="image-portada">
+        <form id="propertyForm">
+            <input type="text" id="address" placeholder="Dirección" required>
+            <input type="number" id="price" placeholder="Precio" required>
+            <input type="number" id="size" placeholder="Tamaño (m²)" required>
+            <textarea id="description" placeholder="Descripción" required></textarea>
+            <button type="submit">Agregar Propiedad</button>
+
+        </form>
+        
+        
+        <ul id="propertyList"></ul>
+        <h2>Lista de Propiedades</h2>
+        <button id="logoutButton">Cerrar Sesión</button>
+    </div>
+</body>
+</html>
