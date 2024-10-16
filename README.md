@@ -113,8 +113,6 @@ You need to install the following tools and configure their dependencies:
 
 4. Access the API at: `https://localhost:8443/login.html`
 
-    ![alt text](images/imageHTTPS.png)
-
 ## Test Resutls
 
 To run the tests use:
