@@ -1,6 +1,6 @@
-# Property Management System with Spring Boot and MySQL
+# Property Management System with Spring Boot and MySQL and 
 
-![alt text](image.png)
+
 
 This project is a simple property management system implemented using Spring Boot, JPA (Java Persistence API), and MySQL. The system allows users to perform CRUD operations (Create, Read, Update, Delete) on property entities. The properties are stored in a MySQL database, and the application exposes a REST API for interaction.
 
@@ -63,7 +63,7 @@ You need to install the following tools and configure their dependencies:
 1. Clone the repository and navigate into the project directory:
     
     ```bash
-    git clone https://github.com/Richi025/Arep-CrudInmobiliario.git 
+    git clone https://github.com/Richi025/Arep-CrudInmobiliario-TLS.git 
     cd PropertyManagement
     ```
 
@@ -135,108 +135,174 @@ To run the program on AWS, we need to have two instances, in my case, they are t
 
 ![images/imageInstances.png](images/imageInstances.png)
 
-1. Now we enter the ServerSQL instances and install Install package repository.
+In the instance called serverSQL, MySQL and the APACHE web server will be installed, and on the other machine, SPRING BOOT will be deployed. A Let's Encrypt certificate will be generated on each machine to implement the HTTPS protocol.
 
-    ![alt text](images/imagePacka.png)
+Two DNS domains are also needed for each EC2 instance in order to generate Let's Encrypt certificates. For this, the following website allows us to generate free domains: https://www.duckdns.org/.
 
-2. Manually import the MySQL GPG key:
+![alt text](images/imageDNS.png)
 
-    ```bash
-    sudo rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
-    ```
+* **ServerSQL** ---> labserverapache.duckdns.org
+* **SeverWebDocker** ---> labserverapacheback.duckdns.org
 
-3. Install MySQL:
+### **instance ServerSQL**
 
-    ```bash
-    sudo yum install mysql-community-server -y
-    ```
+#### A. Install SQL
 
-    ![alt text](images/imageInstall.png)
-
-4. Find the root password in:
+1. To install SQL on the EC2 instance, you can refer to the README of the following repository.
 
     ```bash
-    sudo cat /var/log/mysqld.log | grep 'temporary password'
+    https://github.com/Richi025/Arep-CrudInmobiliario.git
     ```
 
-5. Log in with the found password and change the password with the command:
+    If you follow the steps in the repository, you will have SQL installed on the instance.
+
+#### B. Install APACHE 
+
+1. Connect to the EC2 instance.
+
+    First, you must connect to the EC2 instance using SSH. Use the following command:
 
     ```bash
-    sudo mysql -u root
+    ssh -i "ruta/a/tu/clave.pem" ec2-user@tu-direccion-ip
+
+    ssh -i "serverSQL.pem" ec2-user@ec2-44-204-45-23.compute-1.amazonaws.com
     ```
+
+2. Update the packages.
+    ```bash
+    sudo yum update -y
+    ```
+
+3. Install Apache.
 
     ```bash
-    ALTER USER 'root'@'localhost' IDENTIFIED BY 'NuevaContraseñaSegura';
+    sudo yum install httpd -y
     ```
-    ![alt text](images/imageChange.png)
 
-6. Create user and give privileges.
+4. Start and enable Apache.
+
+    Once installed, the Apache service must be started and configured to start automatically when the system boots.
+    
 
     ```bash
-    CREATE USER 'usuario'@'%' IDENTIFIED BY 'tu_contraseña';
+    sudo systemctl start httpd
+    sudo systemctl enable httpd
     ```
+
+
+5. Check the status of Apache:
+
 
     ```bash
-    GRANT ALL PRIVILEGES ON *.* TO 'usuario'@'%' WITH GRANT OPTION;
+    sudo systemctl status httpd
     ```
+
+#### C. Let's Encrypt certificate
+
+1. Install Dependencies:
+
+    To use Certbot, first, install Python and pip (a package manager for Python):
 
     ```bash
-    FLUSH PRIVILEGES;
+    sudo yum install python3-pip -y
+    sudo pip3 install certbot
+
     ```
+    You also need to install the Apache integration package:
 
-    ![alt text](images/image-3.png)
+     ```bash
+    sudo yum install python-certbot-apache
 
-7. Create the data base;
+    ```
+2.  Configure Apache
+
+    Edit the configuration file for your virtual host for your domain:
 
     ```bash
-    CREATE DATABASE mydatabase;
+    sudo nano /etc/httpd/conf.d/labserverapache.duckdns.org.conf
     ```
 
-    ![alt text](images/image-4.png)
-
-
-7. Enter the following path and change the file by adding
+    Make sure you have something like the following in your configuration file:
 
     ```bash
-    sudo nano /usr/bin/etc/my.cnf
+    <VirtualHost *:80>
+        ServerName labserverapache.duckdns.org
+        DocumentRoot /var/www/html
+
+        RewriteEngine on
+        RewriteCond %{SERVER_NAME} =labserverapache.duckdns.org
+        RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [L,R=301]
+    </VirtualHost>
     ```
+
+
+3. Run Certbot
+
+    Once the Apache configuration file is ready, you can run Certbot to obtain the SSL certificate:
 
     ```bash
-    bin-address = 0.0.0.0
+    sudo certbot --apache -v -d labserverapache.duckdns.org
     ```
-    ![alt text](images/imageAddress.png) 
 
-8. Make the following changes to the code.
+4. Verification
 
-    ![alt text](images/image.png)
+    Now we check the functionality of the certificate by entering the preferred browser and making a query to the DNS labserverapache.duckdns.org using the HTTPS protocol.
 
-    ![alt text](images/image-1.png)
+    ![!\[alt text\](image.png)](images/imageSSL.png)
 
-9. The project's .jar file is uploaded to the ServerWebDocker virtual machine.
 
-    ![alt text](images/image-2.png)
+### **instance SeverWebDocker**
 
-10. Java is installed
+#### A. Let's Encrypt certificate
+
+1. Connect to the EC2 instance.
+
+    First, you must connect to the EC2 instance using SSH. Use the following command:
 
     ```bash
-    sudo yum install java-17-amazon-corretto -y
-    ```
+    ssh -i "ruta/a/tu/clave.pem" ec2-user@tu-direccion-ip
 
-11. Execute the proyect with the command:
+    ssh -i "servidorWebDocker.pem" ec2-user@ec2-54-227-44-70.compute-1.amazonaws.com
+    ```
+2. Install Certbot
+
+    You can do so using the following commands:
 
     ```bash
-    java -jar PropertyApplication-0.0.1-SNAPSHOT.jar
+    sudo yum update -y
+    sudo yum install -y certbot python2-certbot-apache
+
     ```
 
-    And in the following url you can view the project:
+
+
+3. Obtain a Let's Encrypt Certificate
 
     ```bash
-    http://98.81.134.203:8080/
+    sudo certbot certonly --standalone -d your_domain.com
+
+    sudo certbot certonly --standalone -d labserverapacheback.duckdns.org
+
     ```
-    The url changes every time the instances AWS EC2 is run.
 
-    ![alt text](images/AWS+.gif)
+    This command will generate the certificate files, usually located in /etc/letsencrypt/live/your_domain.com/:
 
+    + fullchain.pem: This is the certificate chain.
+    + privkey.pem: This is the private key
+
+4. Convert to PKCS12 Format
+
+    ```bash
+    sudo openssl pkcs12 -export -out /path/to/your/keystore.p12 \
+    -in /etc/letsencrypt/live/your_domain.com/fullchain.pem \
+    -inkey /etc/letsencrypt/live/your_domain.com/privkey.pem \
+    -name "mydomain" -password pass:your_password
+
+    ```
+
+5. Configure Your Spring Boot Application
+
+6. Run the Spring Boot Application
 
 ## Diagram Class
 
