@@ -4,6 +4,10 @@ This project is a simple property management system implemented using Spring Boo
 
 <video controls src="images/Copia de Agregar un título.mp4" title="Title"></video>
 
+
+https://github.com/user-attachments/assets/6c89177e-43ca-4949-b203-a7e45548fff2
+
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
@@ -378,6 +382,9 @@ Two DNS domains are also needed for each EC2 instance in order to generate Let's
     ```
 
     <video controls src="images/Copia de Agregar un título.mp4" title="Title"></video>
+
+    https://github.com/user-attachments/assets/6c89177e-43ca-4949-b203-a7e45548fff2
+   
 ## Diagram Class
 
 ![alt text](images/class.png)
