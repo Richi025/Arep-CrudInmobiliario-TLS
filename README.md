@@ -428,7 +428,8 @@ This diagram represents the structure of the Property Management System and show
 
 ## Architecture
 
-![alt text](images/arquitec.png)
+![arquitec](https://github.com/user-attachments/assets/c7efdfc7-efc6-4541-808c-4d09ebdb7d20)
+
 
 ### Diagram Explanation
 
