@@ -97,6 +97,7 @@ You need to install the following tools and configure their dependencies:
     spring.datasource.password=Root13**
     spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
     spring.jpa.hibernate.ddl-auto=update
+    server.port=8443
     spring.jpa.show-sql=true
     spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
     server.ssl.key-store-password=password123
@@ -110,7 +111,7 @@ You need to install the following tools and configure their dependencies:
     java -jar target/PropertyApplication-0.0.1-SNAPSHOT.jar
     ```
 
-4. Access the API at: `https://localhost:8080/login.html`
+4. Access the API at: `https://localhost:8443/login.html`
 
     ![alt text](images/imageHTTPS.png)
 
